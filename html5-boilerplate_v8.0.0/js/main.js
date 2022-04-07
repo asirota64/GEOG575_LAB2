@@ -36,11 +36,15 @@ function setMap(){
         .projection(projection);
 
     //use d3.queue to parallelize asynchronous data loading
-    d3.queue()
-        .defer(d3.csv, "data/CensusRealEstateData.csv") //load attributes from csv
-        .defer(d3.json, "data/StatesTopo.topojson") //load spatial data
-        .await(callback);
-
+    // d3.queue()
+    //     .defer(d3.csv, "data/CensusRealEstateData.csv") //load attributes from csv
+    //     .defer(d3.json, "data/StatesTopo.topojson") //load spatial data
+    //     .await(callback);
+    //use Promise.all to parallelize asynchronous data loading
+    var promises = [];
+    promises.push(d3.csv("data/CensusRealEstateData.csv")); //load attributes from csv
+    promises.push(d3.json("data/StatesTopo.topojson")); //load choropleth spatial data
+    Promise.all(promises).then(callback);
     function callback(error, csvData, usa){
 
             setGraticule(map,path)
