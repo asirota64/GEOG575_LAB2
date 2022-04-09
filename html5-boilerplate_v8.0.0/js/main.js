@@ -11,28 +11,28 @@ window.onload = setMap();
 window.onload = donut(expressed);
 
 //set up choropleth map
-function setMap(){
+function setMap() {
 
-  //map frame dimensions
-   var width = 795,
-       height = 450;
+    //map frame dimensions
+    var width = 795,
+        height = 450;
 
-   //create new svg container for the map
-   var map = d3.select("body")
-       .append("svg")
-       .attr("class", "map")
-       .attr("width", width)
-       .attr("height", height);
+    //create new svg container for the map
+    var map = d3.select("body")
+        .append("svg")
+        .attr("class", "map")
+        .attr("width", width)
+        .attr("height", height);
 
-   //create Albers equal area conic projection centered on France
-       var projection = d3.geoAlbers()
+    //create Albers equal area conic projection centered on France
+    var projection = d3.geoAlbers()
         .center([0, 43.5])
         .rotate([98, 4, 0])
         .parallels([45.00, 45.5])
         .scale(800)
         .translate([width / 2.00, height / 2.00]);
 
-       var path = d3.geoPath()
+    var path = d3.geoPath()
         .projection(projection);
 
     //use d3.queue to parallelize asynchronous data loading
@@ -43,30 +43,83 @@ function setMap(){
     //use Promise.all to parallelize asynchronous data loading
     var promises = [];
     promises.push(d3.csv("data/CensusRealEstateData.csv")); //load attributes from csv
-    promises.push(d3.json("data/StatesTopo.topojson")); //load choropleth spatial data
+    promises.push(d3.json("data/States.Topojson")); //load choropleth spatial data
     Promise.all(promises).then(callback);
-    function callback(error, csvData, usa){
 
-            setGraticule(map,path)
+    function callback(data) {
+        [csv, json] = data;
 
-            // translate topojson to GeoJSON
-            var unitedStates = topojson.feature(usa, usa.objects.StatesTopo).features;
+        //place graticule on the map
+        setGraticule(map, path);
+        console.log(json)
+        //asigns variable to state objects
+        var states = json.objects;
+        console.log(states)
+        //join csv data to GeoJSON enumeration units
+        states = joinData(states, csv);
 
+        //create the color scale
+        //var colorScale = makeColorScale(csv);
 
-                //join csv data to GeoJSON enumeration units
-            unitedStates = joinData(unitedStates, csvData);
+        //add enumeration units to the map
+        //setEnumerationUnits(states, map, path, colorScale);
 
-            // make color
-             colorScale = makeColorScale(csvData);
+        //add coordinated visualization to the map
+        //setChart(csv, colorScale);
 
-            setEnumerationUnits(unitedStates, map, path, colorScale);
-            createDropdown(csvData);
-
-
-
+        // dropdown
+        //createDropdown(csv);
 
     };
-};
+};//end of setMap()
+
+            //setGraticule(map,path)
+
+            // translate topojson to GeoJSON
+            // var unitedStates = topojson.feature(usa, usa.objects.States.Topojson).features;
+
+
+              //  join csv data to GeoJSON enumeration units
+             //unitedStates = joinData(unitedStates, csvData);
+
+             //make color
+             // colorScale = makeColorScale(csvData);
+
+             //setEnumerationUnits(unitedStates, map, path, colorScale);
+             //createDropdown(csvData);
+
+
+
+
+   // };
+    function joinData(states, csv){
+        //...DATA JOIN LOOPS FROM EXAMPLE 1.1
+        //loop through csv to assign each set of csv attribute values to geojson county
+        for (var i=0; i<csv.length; i++){
+            var csvState = csv[i]; //the current state
+            var csvKey = csvState.State; //the CSV primary key
+            console.log(states.length)
+            //loop through geojson counties to find correct county, change from counties to states
+            for (var a=0; a< 51 ; a++){
+                console.log(states.properties)
+                var geojsonProps = states[a].properties; //the current county geojson properties
+                var geojsonKey = geojsonProps.State; //the geojson primary key
+                console.log(csvKey)
+                console.log(geojsonKey)
+                //where primary keys match, transfer csv data to geojson properties object
+                if (geojsonKey == csvKey){
+
+                    //assign all attributes and values
+                    attrArray.forEach(function(attr){
+                        var val = parseFloat(csvState[attr]); //get csv attribute value
+                        geojsonProps[attr] = val; //assign attribute and value to geojson properties
+                    });
+                };
+            };
+        };
+        console.log(states)
+        return states;
+    };
 
 
 // original working donut function
@@ -226,32 +279,32 @@ function setGraticule(map,path){
        .attr("d", path); //project graticule lines
 };
 
-function joinData(states, csvData){
-  //loop through csv to assign each set of csv attribute values to geojson region
-  for (var i=0; i<csvData.length; i++){
-      var csvRegion = csvData[i]; //the current region
-      var csvKey = csvRegion.State; //the CSV primary key
-
-      //loop through geojson regions to find correct region
-      for (var a=0; a<states.length; a++){
-
-          var geojsonProps = states[a].properties; //the current region geojson properties
-          var geojsonKey = geojsonProps.name; //the geojson primary key
-
-          //where primary keys match, transfer csv data to geojson properties object
-          if (geojsonKey == csvKey){
-
-              //assign all attributes and values
-              attrArray.forEach(function(attr){
-                  var val = parseFloat(csvRegion[attr]); //get csv attribute value
-                  geojsonProps[attr] = val; //assign attribute and value to geojson properties
-              });
-          };
-      };
-  };
-
-    return states;
-};
+// function joinData(states, csv){
+//   //loop through csv to assign each set of csv attribute values to geojson region
+//   for (var i=0; i<csv.length; i++){
+//       var csvRegion = csv[i]; //the current region
+//       var csvKey = csvRegion.State; //the CSV primary key
+//
+//       //loop through geojson regions to find correct region
+//       for (var a=0; a<states.length; a++){
+//
+//           var geojsonProps = states[a].properties; //the current region geojson properties
+//           var geojsonKey = geojsonProps.name; //the geojson primary key
+//
+//           //where primary keys match, transfer csv data to geojson properties object
+//           if (geojsonKey == csvKey){
+//
+//               //assign all attributes and values
+//               attrArray.forEach(function(attr){
+//                   var val = parseFloat(csvRegion[attr]); //get csv attribute value
+//                   geojsonProps[attr] = val; //assign attribute and value to geojson properties
+//               });
+//           };
+//       };
+//   };
+//
+//     return states;
+// };
 
 function choropleth(props, colorScale){
     //make sure attribute value is a number
