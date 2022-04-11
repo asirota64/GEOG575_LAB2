@@ -34,16 +34,40 @@ function setMap() {
 
     var path = d3.geoPath()
         .projection(projection);
-
+                        //Should we use this to load the data instead of the promises?
     //use d3.queue to parallelize asynchronous data loading
     // d3.queue()
     //     .defer(d3.csv, "data/CensusRealEstateData.csv") //load attributes from csv
-    //     .defer(d3.json, "data/StatesTopo.topojson") //load spatial data
+    //     .defer(d3.json, "data/NewTopoJsonStates2.topojson") //load spatial data
     //     .await(callback);
+
+//     function callback(error, csv, usa){
+//
+//         setGraticule(map,path)
+//
+//         // translate topojson to GeoJSON
+//         var unitedStates = topojson.feature(usa, usa.objects.StatesTopo).features;
+//
+//
+//         //join csv data to GeoJSON enumeration units
+//         unitedStates = joinData(unitedStates, csvData);
+//
+//         // make color
+//         colorScale = makeColorScale(csvData);
+//
+//         setEnumerationUnits(unitedStates, map, path, colorScale);
+//         createDropdown(csvData);
+//
+//
+//
+//
+//     };
+// };
+
     //use Promise.all to parallelize asynchronous data loading
     var promises = [];
     promises.push(d3.csv("data/CensusRealEstateData.csv")); //load attributes from csv
-    promises.push(d3.json("data/States.Topojson")); //load choropleth spatial data
+    promises.push(d3.json("data/GeoJSONStates")); //load choropleth spatial data
     Promise.all(promises).then(callback);
 
     function callback(data) {
@@ -57,7 +81,7 @@ function setMap() {
         console.log(states)
         //join csv data to GeoJSON enumeration units
         states = joinData(states, csv);
-
+        console.log(states)
         //create the color scale
         //var colorScale = makeColorScale(csv);
 
@@ -117,8 +141,8 @@ function setMap() {
                 };
             };
         };
-        console.log(states)
-        return states;
+        console.log(STATE)
+        return STATE;
     };
 
 
