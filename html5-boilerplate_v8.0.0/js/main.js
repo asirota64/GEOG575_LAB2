@@ -35,12 +35,12 @@ function setMap() {
     var path = d3.geoPath()
         .projection(projection);
                         //Should we use this to load the data instead of the promises?
-    //use d3.queue to parallelize asynchronous data loading
-    // d3.queue()
-    //     .defer(d3.csv, "data/CensusRealEstateData.csv") //load attributes from csv
-    //     .defer(d3.json, "data/NewTopoJsonStates2.topojson") //load spatial data
-    //     .await(callback);
-
+//     //use d3.queue to parallelize asynchronous data loading
+//     d3.queue()
+//         .defer(d3.csv, "data/CensusRealEstateData.csv") //load attributes from csv
+//         .defer(d3.json, "data/NewTopoJsonStates2.topojson") //load spatial data
+//         .await(callback);
+//
 //     function callback(error, csv, usa){
 //
 //         setGraticule(map,path)
@@ -67,12 +67,11 @@ function setMap() {
     //use Promise.all to parallelize asynchronous data loading
     var promises = [];
     promises.push(d3.csv("data/CensusRealEstateData.csv")); //load attributes from csv
-    promises.push(d3.json("data/GeoJSONStates")); //load choropleth spatial data
+    promises.push(d3.json("data/StatesLayerTopo.topojson")); //load choropleth spatial data
     Promise.all(promises).then(callback);
 
     function callback(data) {
         [csv, json] = data;
-
         //place graticule on the map
         setGraticule(map, path);
         console.log(json)
@@ -112,17 +111,14 @@ function setMap() {
              //setEnumerationUnits(unitedStates, map, path, colorScale);
              //createDropdown(csvData);
 
-
-
-
    // };
     function joinData(states, csv){
         //...DATA JOIN LOOPS FROM EXAMPLE 1.1
         //loop through csv to assign each set of csv attribute values to geojson county
-        for (var i=0; i<csv.length; i++){
+        for (var i=0; i<csv.objects; i++){
             var csvState = csv[i]; //the current state
             var csvKey = csvState.State; //the CSV primary key
-            console.log(states.length)
+            console.log(states.objects)
             //loop through geojson counties to find correct county, change from counties to states
             for (var a=0; a< 51 ; a++){
                 console.log(states.properties)
@@ -141,8 +137,8 @@ function setMap() {
                 };
             };
         };
-        console.log(STATE)
-        return STATE;
+        console.log(states)
+        return states;
     };
 
 

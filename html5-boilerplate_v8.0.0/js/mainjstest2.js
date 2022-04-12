@@ -38,7 +38,7 @@
         //use d3.queue to parallelize asynchronous data loading
         d3.queue()
             .defer(d3.csv, "data/CensusRealEstateData.csv") //load attributes from csv
-            .defer(d3.json, "data/StatesTopojson") //load spatial data
+            .defer(d3.json, "data/StatesLayerTopo.topojson") //load spatial data
             .await(callback);
 
         function callback(error, csvData, usa){
@@ -46,7 +46,7 @@
             setGraticule(map,path)
 
             // translate topojson to GeoJSON
-            var unitedStates = topojson.feature(usa, usa.objects.StatesTopo).features;
+            var unitedStates = topojson.feature(usa, usa.objects.StatesLayerTopo).features;
 
 
             //join csv data to GeoJSON enumeration units
