@@ -76,7 +76,7 @@ function setMap() {
         setGraticule(map, path);
         console.log(json)
         //asigns variable to state objects
-        var states = json.objects;
+        var states = json.features;
         console.log(states)
         //join csv data to GeoJSON enumeration units
         states = joinData(states, csv);
@@ -115,10 +115,10 @@ function setMap() {
     function joinData(states, csv){
         //...DATA JOIN LOOPS FROM EXAMPLE 1.1
         //loop through csv to assign each set of csv attribute values to geojson county
-        for (var i=0; i<csv.objects; i++){
+        for (var i=0; i<csv.features; i++){
             var csvState = csv[i]; //the current state
             var csvKey = csvState.State; //the CSV primary key
-            console.log(states.objects)
+            console.log(states.features)
             //loop through geojson counties to find correct county, change from counties to states
             for (var a=0; a< 51 ; a++){
                 console.log(states.properties)

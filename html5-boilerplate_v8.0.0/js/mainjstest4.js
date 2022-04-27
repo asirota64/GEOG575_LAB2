@@ -1,9 +1,8 @@
-//Geog575 d3 lab April 11, 2021; Cherie Bryant//
 
 //wrap everything into a self-executing anonymous function to move attribute variables to local scope
 (function(){
 
-var attrArray = ["Fast Food Restaurants per Million People", "Vegan Restaurants per Million People", "Vegetarian Restaurants per Million People", "Restaurants with Vegetarian Options per Million People", "Total Vegan/Vegetarian/Vegetarian Option Restaurants per Million People", "Percentage of Population that is Obese", "Heart Disease Deaths per Million People"];
+var attrArray = ["StateMedHomeVal", "AnnualTax217k", "AnnualTaxMedHomeVal"];
 
 var expressed = attrArray[0]; //initial attribute
 
@@ -39,7 +38,7 @@ function setMap(){
         .attr("height", height) //assign the height
         .attr("class", "container"); //assigning a class (same as the block name) for styling and future selection
         //.style("border", "rgba(0,0,0,0.2)");
-    
+   // console.log(container)
     //create Albers equal area conic projection centered on the US
 	var projection = d3.geoAlbersUsa()
         //.center([-6, 40 ])
@@ -53,7 +52,7 @@ function setMap(){
     
     //use Promise.all to parallelize asynchronous data loading
     var promises = [];
-    promises.push(d3.csv("data/restaurant_cdc_data.csv")); //load attribute data
+    promises.push(d3.csv("data/CensusRealEstateData.csv")); //load attribute data
     promises.push(d3.json("data/states19.topojson")); //load spatial data
     Promise.all(promises).then(callback);
     
@@ -62,14 +61,9 @@ function setMap(){
         //create the attribute and spatial variables from 'promises'
 		restCDCdata = data[0];
 		states = data[1];
-        
-        //console.log(restCDCdata);
-        //console.log(states);
 
         //translate states TopoJson to GeoJson
         var usStates = topojson.feature(states, states.objects.states19).features;
-        
-        //console.log(usStates);
         
         //join csv data to GeoJSON enumeration units (states)
         usStates = joinData(usStates, restCDCdata);
@@ -89,19 +83,18 @@ function setMap(){
 
 };  //End of setMap()    
 
-
 //join the attribute data to the spatial data
 function joinData(usStates, restCDCdata){
     
     //loop through csv data to assign each set of attribute values to geojson state
     for (var i=0; i<restCDCdata.length; i++){
         var csvState = restCDCdata[i]; //the current state
-        var csvKey = csvState.STUSPS; //the CSV primary key
+        var csvKey = csvState.State; //the CSV primary key 'STUSPS'
         
         //loop through geojson state to find correct state
         for (var a=0; a<usStates.length; a++){
             var geojsonProps = usStates[a].properties; //the current state geojson properties
-            var geojsonKey = geojsonProps.STUSPS; //the geojson primary key
+            var geojsonKey = geojsonProps.NAME; //the geojson primary key 'STUSPS'
             
             //where primary keys match, transfer csv data to geojson properties object
             if (geojsonKey == csvKey){
@@ -114,11 +107,9 @@ function joinData(usStates, restCDCdata){
             };
         };
     };
-    //console.log(usStates);
     return usStates;
 }; //end joinData()
 
-    
 //create color scale generator
 function makeColorScale(data){
     //set color classes
@@ -157,7 +148,6 @@ function choropleth(props, colorScale){
     };
 }; //end choropleth()
 
-    
 //add enumeration units (states) to the map
 function setEnumerationUnits(usStates, container, path, colorScale){
     var stateGeog = container.selectAll(".stateGeog")
@@ -165,7 +155,7 @@ function setEnumerationUnits(usStates, container, path, colorScale){
         .enter()
         .append("path")
         .attr("class", function(d){
-            return "stateGeog " + d.properties.STUSPS;
+            return "stateGeog " + d.properties.NAME;
         })
         .attr("d", path)
         .style("fill", function(d){
@@ -174,16 +164,15 @@ function setEnumerationUnits(usStates, container, path, colorScale){
         .on("mouseover", function(d){
             highlight(d.currentTarget.__data__.properties);
         })
-        .on("mouseout", function(d){
-            dehighlight(d.currentTarget.__data__.properties);
+         .on("mouseout", function(d){
+            dehighlight(d.properties);
         })
         .on("mousemove", moveLabel);
-
     //add style descriptor for each path to be used by dehighlight()
     var desc = stateGeog.append("desc")
         .text('{"stroke": "#000", "stroke-width": "0.5px"}');
-}; //end setEnumerationUnits()  
-    
+}; //end setEnumerationUnits()
+
     
 //create coordinated bar chart
 function setChart(restCDCdata, colorScale){
@@ -210,14 +199,14 @@ function setChart(restCDCdata, colorScale){
             return b[expressed]-a[expressed]
         })
         .attr("class", function(d){
-            return "bar " + d.STUSPS;
+            return "bar " + d.State; //'STUSPS'
         })
         .attr("width", chartInnerWidth / restCDCdata.length - 1)
         .on("mouseover", function(d){
-            highlight(d.currentTarget.__data__);
+            highlight(d);
         })
         .on("mouseout", function(d){
-            dehighlight(d.currentTarget.__data__);
+            dehighlight(d);
         })
         .on("mousemove", moveLabel);    
 
@@ -351,17 +340,19 @@ function updateChart(bars, n, colorScale){
 //highlight enumeration units and bars
 function highlight(props){
     //change stroke
-    var selected = d3.selectAll("." + props.STUSPS)
+   console.log(props)
+    var selected = d3.selectAll("." + props.NAME) //'STUSPS'
         .style("stroke", "red")
         .style("stroke-width", "3");
-    
-    setLabel(props);
+
+    setLabel(props)
+    moveLabel(d3.event);
 }; //end highlight()
-    
+
     
 //reset the element style on mouseout
 function dehighlight(props){
-    var selected = d3.selectAll("." + props.STUSPS)
+    var selected = d3.selectAll("." + props.NAME) //'STUSPS'
         .style("stroke", function(){
             return getStyle(this, "stroke")
         })
@@ -383,39 +374,38 @@ function dehighlight(props){
         return styleObject[styleName];
     };
 }; //end dehighlight()
-    
 
 //create a dynamic label on mouseover
 function setLabel(props){
-    //label content
+
+   // label content
     var labelAttribute = "<h1>" + props[expressed] + "</h1><b>" + expressed + "</b>";
-    
+        //debugger
     //create info label div
     var infolabel = d3.select("body")
         .append("div")
         .attr("class", "infolabel")
-        .attr("id", props.STUSPS + "_label")
+        .attr("id", props.NAME + "_label") //'STUSPS'
         .html(labelAttribute);
-    
+
     var stateName = infolabel.append("div")
         .attr("class", "labelname")
         .html(props.NAME);
 }; //end setLabel()
-    
 
 //move info label with mouse
 function moveLabel(event){
     
-    //get wideth of the label
+    //get width of the label
     var labelWidth = d3.select(".infolabel")
         .node()
         .getBoundingClientRect()
         .width;
-    
+    console.log(labelWidth)
     //use coordinates of mousemove event to set label coordinates
     var x1 = event.clientX + 10,
-        y1 = event.clientY - 75,
-        x2 = event.clientX - labelWidth - 10,
+        y1 = event.clientY + 10,
+        x2 = event.clientX + 10,
         y2 = event.clientY + 25;
     
     //horizontal label coordinate, testing for overflow
